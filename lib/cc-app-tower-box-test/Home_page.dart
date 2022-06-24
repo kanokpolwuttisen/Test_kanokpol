@@ -1,14 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'dart:math';
-
-// class Widget_Box_Color {
-//   Color color;
-//   Widget_Box_Color({
-//     required this.color,
-//   });
-// }
 
 class Tower_box_test extends StatefulWidget {
   Tower_box_test({Key? key}) : super(key: key);
@@ -16,7 +8,7 @@ class Tower_box_test extends StatefulWidget {
   @override
   State<Tower_box_test> createState() => _Tower_box_testState();
 }
- 
+
 class _Tower_box_testState extends State<Tower_box_test> {
   double _width = 64;
   bool isTransparent = false;
@@ -29,6 +21,7 @@ class _Tower_box_testState extends State<Tower_box_test> {
   bool _loopActive = false;
 
   List<Color> Tower_Box = [];
+
   @override
   void initState() {
     int numColor;
@@ -50,8 +43,13 @@ class _Tower_box_testState extends State<Tower_box_test> {
         print(Tower_Box.length);
       }
     }
-
     super.initState();
+    new Future.delayed(Duration.zero, () {
+      showDialog(
+        context: context,
+        builder: (_) => FunkyOverlay(),
+      );
+    });
   }
 
   late Timer _timer;
@@ -143,7 +141,7 @@ class _Tower_box_testState extends State<Tower_box_test> {
       }
 
       // wait a bit
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(Duration(milliseconds: 1000));
     }
 
     _loopActive = false;
@@ -185,7 +183,7 @@ class _Tower_box_testState extends State<Tower_box_test> {
                             child: index == Tower_Box.length - 1
                                 ? Center(
                                     child: Container(
-                                      margin: EdgeInsets.only(bottom: 35),
+                                      margin: EdgeInsets.only(bottom: 30),
                                       // width: 100,
                                       // height: 100,
                                       child: Stack(
@@ -194,8 +192,8 @@ class _Tower_box_testState extends State<Tower_box_test> {
                                             angle: 45 * (pi / 180),
                                             child: Container(
                                               color: Tower_Box[index],
-                                              width: 170,
-                                              height: 170,
+                                              width: 120,
+                                              height: 120,
                                             ),
                                           ),
                                         ],
@@ -206,7 +204,7 @@ class _Tower_box_testState extends State<Tower_box_test> {
                                     width: 60,
                                     height: 64,
                                     margin: const EdgeInsets.only(
-                                        left: 100, right: 100),
+                                        left: 120, right: 120, bottom: 4),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8.0),
                                       border: Border.all(
@@ -235,7 +233,7 @@ class _Tower_box_testState extends State<Tower_box_test> {
               width: 360,
               height: 104,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Listener(
                     onPointerDown: (details) {
@@ -268,6 +266,7 @@ class _Tower_box_testState extends State<Tower_box_test> {
                     child: Container(
                       width: 64,
                       height: 64,
+                      margin: EdgeInsets.all(7),
                       padding: const EdgeInsets.all(20.0),
                       decoration: BoxDecoration(
                           // borderRadius: BorderRadius.circular(30.0),
@@ -339,12 +338,51 @@ class _AnimatedBoxState extends State<AnimatedBox> {
   }
 }
 
-// onTap: () {
-// print("Touching");
-// setState(() {
-// // if (false) {
-// isVisible = !isVisible;
-// selected = !selected;
-// // }
-// });
-// },
+class FunkyOverlay extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => FunkyOverlayState();
+}
+
+class FunkyOverlayState extends State<FunkyOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController controller;
+  late Animation<double> scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 450));
+    scaleAnimation =
+        CurvedAnimation(parent: controller, curve: Curves.elasticInOut);
+
+    controller.addListener(() {
+      setState(() {});
+    });
+
+    controller.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: ScaleTransition(
+          scale: scaleAnimation,
+          child: Container(
+            decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15.0))),
+            child: Padding(
+              padding: const EdgeInsets.all(50.0),
+              child: Text("กดปุ่มสีที่ตรงกันค้างไว้ 2 วินาทีเพื่อทำลาย block"),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

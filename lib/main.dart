@@ -1,21 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:kanokpol_android/Home.dart';
-import 'package:kanokpol_android/Quiz/Problem1.dart';
-import 'package:kanokpol_android/Quiz/Problem3.dart';
-import 'package:kanokpol_android/p1.dart';
-import 'package:kanokpol_android/p2.dart';
-import 'package:kanokpol_android/p3.dart';
-import 'package:kanokpol_android/p4.dart';
-import 'package:kanokpol_android/p5.dart';
-import 'package:kanokpol_android/p6.dart';
-import 'package:kanokpol_android/p7.dart';
-import 'package:kanokpol_android/Quiz/HomeQuiz.dart';
 
-import 'Quiz/Problem2.dart';
-import 'Quiz/Problem4.dart';
 import 'cc-app-tower-box-test/Home_page.dart';
-import 'cc-app-tower-box-test/test.dart';
-import 'cc-app-tower-box-test/tset_bottom_pressed.dart';
 
 void main() {
   runApp(const MyApp());

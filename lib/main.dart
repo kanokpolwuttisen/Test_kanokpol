@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       routes: {
         // When navigating to the "/" route, build the FirstScreen widget.
         // '/home': (context) => const HomeQuiz(),
-        '/home': (context) => Tower_box_test(),
+        '/home': (context) => AnimatedListSample(),
         // When navigating to the "/second" route, build the SecondScreen widget.
         // '/Problem1': (context) => const Problem1(),
         // '/Problem2': (context) => const Problem2(),

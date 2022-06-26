@@ -1,53 +1,66 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'dart:math';
 
-class Tower_box_test extends StatefulWidget {
-  Tower_box_test({Key? key}) : super(key: key);
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-  @override
-  State<Tower_box_test> createState() => _Tower_box_testState();
+void main() {
+  runApp(const AnimatedListSample());
 }
 
-class _Tower_box_testState extends State<Tower_box_test> {
-  double _width = 64;
-  bool isTransparent = false;
-  bool isVisible = true;
-  double opacityLevel = 1.0;
-  bool selected = true;
+class AnimatedListSample extends StatefulWidget {
+  const AnimatedListSample({Key? key}) : super(key: key);
 
-  int _counter = 0;
-  bool _buttonPressed = false;
-  bool _loopActive = false;
+  @override
+  State<AnimatedListSample> createState() => _AnimatedListSampleState();
+}
 
-  List<Color> Tower_Box = [];
+class _AnimatedListSampleState extends State<AnimatedListSample> {
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  late ListModel<int> _list;
+  late List<int> numList = [];
+  int? _selectedItem;
+  late int
+      _nextItem; // The next item inserted when the user presses the '+' button.
+  late int _removeItem;
+  int min = 1, max = 3;
+  late int num;
 
   @override
   void initState() {
-    int numColor;
-    Color colorOne = const Color(0xffF9DFFF);
-    Color colorTwo = const Color(0xff90E5FF);
-    var min = 1;
-    var max = 3;
-    for (var i = 0; i < 11; i++) {
-      numColor = min + Random().nextInt(max - min);
-      if (i == 10) {
-        Tower_Box.add(Colors.purple);
-      } else {
-        if (numColor == 1) {
-          Tower_Box.add(colorOne);
-        } else {
-          Tower_Box.add(colorTwo);
-        }
-        print(Tower_Box[i]);
-        print(Tower_Box.length);
-      }
-    }
     super.initState();
-    new Future.delayed(Duration.zero, () {
+    for (var i = 0; i < 11; i++) {
+      num = min + Random().nextInt(max - min);
+      if (i == 9) {
+        numList.add(3);
+      } else if (i == 10) {
+        numList.add(0);
+      } else {
+        if (num == 1) {
+          numList.add(1);
+        } else if (num == 2) {
+          numList.add(2);
+        }
+      }
+      print(numList);
+      print(numList.length);
+    }
+
+    _list = ListModel<int>(
+      listKey: _listKey,
+      initialItems: numList,
+      removedItemBuilder: _buildRemovedItem,
+    );
+    _nextItem = 10;
+    _removeItem = 0;
+    print(_list);
+    print(_list.length);
+
+    Future.delayed(Duration(seconds: 2), () {
       showDialog(
         context: context,
-        builder: (_) => FunkyOverlay(),
+        builder: (_) => FunkyOverlay(
+            text: "กดปุ่มสีที่ตรงกันค้างไว้ 2 วินาทีเพื่อทำลาย block"),
       );
     });
   }
@@ -56,8 +69,8 @@ class _Tower_box_testState extends State<Tower_box_test> {
   int _start = 0;
 
   void startTimer() {
-    const oneSec = const Duration(seconds: 1);
-    _timer = new Timer.periodic(
+    const oneSec = Duration(seconds: 1);
+    _timer = Timer.periodic(
       oneSec,
       (Timer timer) {
         setState(() {
@@ -67,8 +80,12 @@ class _Tower_box_testState extends State<Tower_box_test> {
     );
   }
 
-  int i = 0;
+  // int = 1 is Color(0xffF9DFFF), int = 2 is Color(0xff90E5FF)
   int tap = 0;
+  int _counter = 0;
+  bool _buttonPressed = false;
+  bool _loopActive = false;
+  bool _dialogActive = true;
   void _increaseCounterWhilePressed(String button) async {
     // make sure that only one loop is active
     if (_loopActive) return;
@@ -76,19 +93,20 @@ class _Tower_box_testState extends State<Tower_box_test> {
     _loopActive = true;
 
     while (_buttonPressed) {
+      print(_counter);
       // do your thing
       if (_counter == 2) {
         if (tap == 0) {
           startTimer();
           tap++;
         }
-        if (button == "center" && Tower_Box[0] == Colors.purple) {
+        if (_list[0] == 3 && button == "center") {
           setState(() {
             // isVisible = !isVisible;
             // selected = !selected;
             _counter = 0;
             // i++;
-            Tower_Box.remove(Tower_Box[0]);
+            _remove();
             setState(() {
               _timer.cancel();
             });
@@ -107,29 +125,30 @@ class _Tower_box_testState extends State<Tower_box_test> {
             );
 
             print("left");
-            print(Tower_Box.length);
+            print(_list);
           });
+          break;
         }
-        if (Tower_Box[0] == const Color(0xffF9DFFF) && button == "left") {
+        if (_list[0] == 1 && button == "left") {
           setState(() {
             // isVisible = !isVisible;
             // selected = !selected;
             _counter = 0;
             // i++;
-            Tower_Box.remove(Tower_Box[0]);
+            _remove();
             print("left");
-            print(Tower_Box.length);
+            print(_list);
           });
         }
-        if (Tower_Box[0] == const Color(0xff90E5FF) && button == "right") {
+        if (_list[0] == 2 && button == "right") {
           setState(() {
             // isVisible = !isVisible;
             // selected = !selected;
             _counter = 0;
             // i++;
-            Tower_Box.remove(Tower_Box[0]);
+            _remove();
             print("right");
-            print(Tower_Box.length);
+            print(_list);
           });
         }
       } else {
@@ -137,6 +156,19 @@ class _Tower_box_testState extends State<Tower_box_test> {
           _counter++;
           // Tower_Box.remove(Tower_Box[0]);
           // i++;
+        });
+      }
+      if (_list.length == 2 && _dialogActive) {
+        setState(() {
+          Future.delayed(Duration.zero, () {
+            showDialog(
+              context: context,
+              builder: (_) => FunkyOverlay(
+                  text: "กดสองปุ่ม ค้างไว้ 2 วินาทีเพื่อทำลาย block"),
+            );
+          });
+          _dialogActive = !_dialogActive;
+          _counter = 0;
         });
       }
 
@@ -154,67 +186,71 @@ class _Tower_box_testState extends State<Tower_box_test> {
     });
   }
 
-  void _changeOpacity() {
-    setState(() => opacityLevel = opacityLevel == 0 ? 1.0 : 0.0);
+  // Used to build list items that haven't been removed.
+  Widget _buildItem(
+      BuildContext context, int index, Animation<double> animation) {
+    return CardItem(
+      animation: animation,
+      item: _list[index],
+      selected: _selectedItem == _list[index],
+      onTap: () {
+        setState(() {
+          _selectedItem = _selectedItem == _list[index] ? null : _list[index];
+        });
+      },
+    );
+  }
+
+  // Used to build an item after it has been removed from the list. This
+  // method is needed because a removed item remains visible until its
+  // animation has completed (even though it's gone as far this ListModel is
+  // concerned). The widget will be used by the
+  // [AnimatedListState.removeItem] method's
+  // [AnimatedListRemovedItemBuilder] parameter.
+  Widget _buildRemovedItem(
+      int item, BuildContext context, Animation<double> animation) {
+    return CardItem(
+      animation: animation,
+      item: item,
+      // No gesture detector here: we don't want removed items to be interactive.
+    );
+  }
+
+  // Insert the "next item" into the list model.
+  void _insert() {
+    final int index =
+        _selectedItem == null ? _list.length : _list.indexOf(_selectedItem!);
+    final int randomNum;
+    randomNum = min + Random().nextInt(max - min);
+    _list.insert(index, randomNum);
+  }
+
+  // Remove the selected item from the list model.
+  void _remove() {
+    _list.removeAt(0);
+    print(_list.length);
+    print(_list[0]);
+    setState(() {
+//         _selectedItem = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  width: 360,
-                  color: const Color(0xffD8D8D8),
-                  child: Stack(alignment: Alignment.center, children: [
-                    ListView.builder(
-                      reverse: true,
-                      itemCount: Tower_Box.length,
-                      itemBuilder: (context, index) {
-                        return AnimatedPositioned(
-                            bottom:
-                                selected ? 68.0 * index : (68.0 * (index - 1)),
-                            duration: const Duration(milliseconds: 500),
-                            child: index == Tower_Box.length - 1
-                                ? Center(
-                                    child: Container(
-                                      margin: EdgeInsets.only(bottom: 30),
-                                      // width: 100,
-                                      // height: 100,
-                                      child: Stack(
-                                        children: [
-                                          Transform.rotate(
-                                            angle: 45 * (pi / 180),
-                                            child: Container(
-                                              color: Tower_Box[index],
-                                              width: 120,
-                                              height: 120,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : Container(
-                                    width: 60,
-                                    height: 64,
-                                    margin: const EdgeInsets.only(
-                                        left: 120, right: 120, bottom: 4),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8.0),
-                                      border: Border.all(
-                                          color: const Color(0xff707070)),
-                                      color: Tower_Box[index],
-                                    ),
-                                  ));
-                      },
-                    ),
-                  ]),
+    return MaterialApp(
+      home: Scaffold(
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Stack(children: [
+                SizedBox(
+                  child: AnimatedList(
+                    key: _listKey,
+                    reverse: true,
+                    initialItemCount: _list.length,
+                    itemBuilder: _buildItem,
+                  ),
                 ),
                 Container(
                   width: 100,
@@ -226,119 +262,198 @@ class _Tower_box_testState extends State<Tower_box_test> {
                   padding: EdgeInsets.only(top: 150),
                   child: Text("Total Time :\n $_start s"),
                 )
-              ],
+              ]),
             ),
-          ),
-          Container(
-              width: 360,
-              height: 104,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Listener(
-                    onPointerDown: (details) {
-                      _buttonPressed = true;
-                      _increaseCounterWhilePressed("left");
-                    },
-                    onPointerUp: (details) {
-                      _buttonPressed = false;
-                      _resetCounter();
-                    },
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      padding: const EdgeInsets.all(20.0),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30.0),
-                          border: Border.all(color: const Color(0xff707070)),
-                          color: const Color(0xffF9DFFF)),
+            Container(
+                // width: 360,
+                height: 104,
+                color: const Color(0xffD8D8D8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Listener(
+                      onPointerDown: (details) {
+                        _buttonPressed = true;
+                        _increaseCounterWhilePressed("left");
+                      },
+                      onPointerUp: (details) {
+                        _buttonPressed = false;
+                        _resetCounter();
+                      },
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30.0),
+                            border: Border.all(color: const Color(0xff707070)),
+                            color: const Color(0xffF9DFFF)),
+                      ),
                     ),
-                  ),
-                  Listener(
-                    onPointerDown: (details) {
-                      _buttonPressed = true;
-                      _increaseCounterWhilePressed("center");
-                    },
-                    onPointerUp: (details) {
-                      _buttonPressed = false;
-                      _resetCounter();
-                    },
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      margin: EdgeInsets.all(7),
-                      padding: const EdgeInsets.all(20.0),
-                      decoration: BoxDecoration(
-                          // borderRadius: BorderRadius.circular(30.0),
-                          // border: Border.all(color: const Color(0xff707070)),
-                          ),
+                    Listener(
+                      onPointerDown: (details) {
+                        _buttonPressed = true;
+                        _increaseCounterWhilePressed("center");
+                      },
+                      onPointerUp: (details) {
+                        _buttonPressed = false;
+                        _resetCounter();
+                      },
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        margin: EdgeInsets.all(7),
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                            // borderRadius: BorderRadius.circular(30.0),
+                            // border: Border.all(color: const Color(0xff707070)),
+                            ),
+                      ),
                     ),
-                  ),
-                  Listener(
-                    onPointerDown: (details) {
-                      _buttonPressed = true;
-                      _increaseCounterWhilePressed("right");
-                    },
-                    onPointerUp: (details) {
-                      _buttonPressed = false;
-                      _resetCounter();
-                    },
-                    child: Container(
-                      // width: _width,
-                      width: 64,
-                      height: 64,
-                      padding: const EdgeInsets.all(20.0),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30.0),
-                          border: Border.all(color: const Color(0xff707070)),
-                          color: const Color(0xff90E5FF)),
+                    Listener(
+                      onPointerDown: (details) {
+                        _buttonPressed = true;
+                        _increaseCounterWhilePressed("right");
+                      },
+                      onPointerUp: (details) {
+                        _buttonPressed = false;
+                        _resetCounter();
+                      },
+                      child: Container(
+                        // width: _width,
+                        width: 64,
+                        height: 64,
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30.0),
+                            border: Border.all(color: const Color(0xff707070)),
+                            color: const Color(0xff90E5FF)),
+                      ),
                     ),
-                  ),
-                ],
-              ))
-        ],
+                  ],
+                ))
+          ],
+        ),
       ),
     );
   }
 }
 
-class AnimatedBox extends StatefulWidget {
-  AnimatedBox(
-      {Key? key,
-      required this.index,
-      required this.color,
-      required this.selected})
-      : super(key: key);
+typedef RemovedItemBuilder<T> = Widget Function(
+    T item, BuildContext context, Animation<double> animation);
 
-  int index;
-  Color color;
-  bool selected;
+/// Keeps a Dart [List] in sync with an [AnimatedList].
+///
+/// The [insert] and [removeAt] methods apply to both the internal list and
+/// the animated list that belongs to [listKey].
+///
+/// This class only exposes as much of the Dart List API as is needed by the
+/// sample app. More list methods are easily added, however methods that
+/// mutate the list must make the same changes to the animated list in terms
+/// of [AnimatedListState.insertItem] and [AnimatedList.removeItem].
+class ListModel<E> {
+  ListModel({
+    required this.listKey,
+    required this.removedItemBuilder,
+    Iterable<E>? initialItems,
+  }) : _items = List<E>.from(initialItems ?? <E>[]);
 
-  @override
-  State<AnimatedBox> createState() => _AnimatedBoxState();
+  final GlobalKey<AnimatedListState> listKey;
+  final RemovedItemBuilder<E> removedItemBuilder;
+  final List<E> _items;
+
+  AnimatedListState? get _animatedList => listKey.currentState;
+
+  void insert(int index, E item) {
+    _items.insert(index, item);
+    _animatedList!.insertItem(index);
+    print(_items);
+  }
+
+  E removeAt(int index) {
+    final E removedItem = _items.removeAt(index);
+    if (removedItem != null) {
+      _animatedList!.removeItem(
+        index,
+        (BuildContext context, Animation<double> animation) {
+          return removedItemBuilder(removedItem, context, animation);
+        },
+      );
+    }
+    return removedItem;
+  }
+
+  int get length => _items.length;
+
+  E operator [](int index) => _items[index];
+
+  int indexOf(E item) => _items.indexOf(item);
 }
 
-class _AnimatedBoxState extends State<AnimatedBox> {
+/// Displays its integer item as 'item N' on a Card whose color is based on
+/// the item's value.
+///
+/// The text is displayed in bright green if [selected] is
+/// true. This widget's height is based on the [animation] parameter, it
+/// varies from 0 to 128 as the animation varies from 0.0 to 1.0.
+class CardItem extends StatelessWidget {
+  const CardItem({
+    Key? key,
+    this.onTap,
+    this.selected = false,
+    required this.animation,
+    required this.item,
+  })  : assert(item >= 0),
+        super(key: key);
+
+  final Animation<double> animation;
+  final VoidCallback? onTap;
+  final int item;
+  final bool selected;
+
   @override
   Widget build(BuildContext context) {
-    return AnimatedPositioned(
-        width: 120,
-        height: 64,
-        bottom:
-            widget.selected ? 68.0 * widget.index : (68.0 * (widget.index - 1)),
-        duration: const Duration(milliseconds: 500),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8.0),
-            border: Border.all(color: const Color(0xff707070)),
-            color: widget.color,
-          ),
-        ));
+    return item == 3
+        ? SizeTransition(
+            sizeFactor: animation,
+            child: Center(
+              child: Transform.rotate(
+                angle: 45 * (pi / 180),
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 30, top: 30),
+                  color: const Color(0xffD27AFF),
+                  width: 120,
+                  height: 120,
+                ),
+              ),
+            ),
+          )
+        : item == 0
+            ? Container()
+            : Padding(
+                padding: const EdgeInsets.only(left: 120, right: 120),
+                child: SizeTransition(
+                  sizeFactor: animation,
+                  child: SizedBox(
+                      height: 64.0,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(color: const Color(0xff707070)),
+                          color: item == 1
+                              ? const Color(0xffF9DFFF)
+                              : const Color(0xff90E5FF),
+                        ),
+                      )),
+                ),
+              );
   }
 }
 
 class FunkyOverlay extends StatefulWidget {
+  FunkyOverlay({Key? key, required this.text}) : super(key: key);
+  String text;
   @override
   State<StatefulWidget> createState() => FunkyOverlayState();
 }
@@ -378,7 +493,7 @@ class FunkyOverlayState extends State<FunkyOverlay>
                     borderRadius: BorderRadius.circular(15.0))),
             child: Padding(
               padding: const EdgeInsets.all(50.0),
-              child: Text("กดปุ่มสีที่ตรงกันค้างไว้ 2 วินาทีเพื่อทำลาย block"),
+              child: Text(widget.text),
             ),
           ),
         ),
